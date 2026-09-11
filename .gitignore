@@ -1,5 +1,6 @@
 # Dependencies
 node_modules/
+backend/ai_health/.venv/
 
 # Environment files (credentials and machine-specific configuration)
 .env

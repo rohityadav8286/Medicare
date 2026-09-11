@@ -69,6 +69,7 @@ export default function Navbar() {
     { label: "Home", href: "/" },
     { label: "Doctors", href: "/doctors" },
     { label: "Services", href: "/services" },
+    { label: "AI Health", href: "/ai-health" },
     { label: "Appointments", href: "/appointments" },
     { label: "Contact", href: "/contact" },
   ];
