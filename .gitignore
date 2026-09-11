@@ -6,3 +6,4 @@ backend/ai_health/.venv/
 .env
 .env.*
 !.env.example
+AI-Health-Chatbot-main/
