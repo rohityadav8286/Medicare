@@ -8,6 +8,7 @@ import {
   updateService,
   deleteService,
 } from "../controllers/serviceController.js";
+import { requireAdminPassword } from "../middlewares/adminPasswordAuth.js";
 
 const upload = multer({ dest: "/tmp" }); // same as your existing setup (or change to suit)
 
@@ -18,12 +19,12 @@ serviceRouter.get("/", getServices);
 serviceRouter.get("/:id", getServiceById);
 
 // Create service (multipart form; image field name is "image")
-serviceRouter.post("/", upload.single("image"), createService);
+serviceRouter.post("/", requireAdminPassword, upload.single("image"), createService);
 
 // Update service (multipart form; image field name is "image")
-serviceRouter.put("/:id", upload.single("image"), updateService);
+serviceRouter.put("/:id", requireAdminPassword, upload.single("image"), updateService);
 
 // Delete
-serviceRouter.delete("/:id", deleteService);
+serviceRouter.delete("/:id", requireAdminPassword, deleteService);
 
 export default serviceRouter;

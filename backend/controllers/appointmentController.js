@@ -28,17 +28,9 @@ const buildFrontendBase = (req) => {
 
 function resolveClerkUserId(req) {
   try {
-    const auth = req.auth || {};
-    const fromReq = auth?.userId || auth?.user_id || auth?.user?.id || req.user?.id || null;
-    if (fromReq) return fromReq;
-    try {
-      const serverAuth = getAuth ? getAuth(req) : null;
-      return serverAuth?.userId || null;
-    } catch (e) {
-      return null;
-    }
-  } catch (e) {
-    return null;
+    return getAuth(req)?.userId || req.user?.id || null;
+  } catch {
+    return req.user?.id || null;
   }
 }
 
@@ -93,10 +85,10 @@ export const getAppointmentById = async (req, res) => {
 export const getAppointmentsByPatient = async (req, res) => {
   try {
     const queryCreatedBy = req.query.createdBy || null;
-    const clerkUserId = req.auth?.userId || null;
+    const clerkUserId = resolveClerkUserId(req);
     const resolvedCreatedBy = queryCreatedBy || clerkUserId || null;
 
-    console.log("resolvedCreatedBy (query or req.auth.userId):", resolvedCreatedBy);
+    console.log("resolvedCreatedBy (query or Clerk user ID):", resolvedCreatedBy);
 
     if (!resolvedCreatedBy && !req.query.mobile) {
       return res.status(401).json({

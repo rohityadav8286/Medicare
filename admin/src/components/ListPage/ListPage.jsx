@@ -1,5 +1,6 @@
 // src/components/AnimatedDoctorList.responsive.jsx
 import React, { useMemo, useState, useEffect } from "react";
+import { useAuth } from "@clerk/clerk-react";
 import {
   Star,
   BadgeIndianRupee,
@@ -7,8 +8,10 @@ import {
   Search,
   Users,
   EyeClosed,
+  Pencil,
 } from "lucide-react";
 import { doctorListStyles } from "../../assets/dummyStyles";
+import { adminFetch } from "../../utils/adminFetch";
 
 function formatDateISO(iso) {
   if (!iso || typeof iso !== "string") return iso;
@@ -100,6 +103,7 @@ function getSortedScheduleDates(scheduleLike) {
 
 export default function AnimatedDoctorListResponsive({ apiBase }) {
   const API_BASE = apiBase || "http://localhost:4000";
+  const { getToken } = useAuth();
 
   const [doctors, setDoctors] = useState([]);
   const [expanded, setExpanded] = useState(null);
@@ -107,6 +111,9 @@ export default function AnimatedDoctorListResponsive({ apiBase }) {
   const [showAll, setShowAll] = useState(false);
   const [filterStatus, setFilterStatus] = useState("all");
   const [loading, setLoading] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState(null);
+  const [editForm, setEditForm] = useState({});
+  const [savingEdit, setSavingEdit] = useState(false);
 
   // track if we are on a mobile (tailwind "sm" breakpoint is 640px)
   const [isMobileScreen, setIsMobileScreen] = useState(false);
@@ -199,8 +206,9 @@ export default function AnimatedDoctorListResponsive({ apiBase }) {
     if (!ok) return;
 
     try {
-      const res = await fetch(`${API_BASE}/api/doctors/${id}`, {
+      const res = await adminFetch(`${API_BASE}/api/doctors/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {
@@ -213,6 +221,66 @@ export default function AnimatedDoctorListResponsive({ apiBase }) {
     } catch (err) {
       console.error("delete error", err);
       alert("Network error deleting doctor");
+    }
+  }
+
+  function startEdit(doc) {
+    setEditingDoctor(doc);
+    setEditForm({
+      name: doc.name || "",
+      email: doc.email || "",
+      specialization: doc.specialization || "",
+      experience: doc.experience ?? "",
+      qualifications: doc.qualifications || "",
+      location: doc.location || "",
+      about: doc.about || "",
+      fee: doc.fee ?? "",
+      availability: doc.availability || "Available",
+      rating: doc.rating ?? "",
+    });
+  }
+
+  async function saveEdit(event) {
+    event.preventDefault();
+    if (!editingDoctor) return;
+
+    setSavingEdit(true);
+    const id = editingDoctor._id || editingDoctor.id;
+    try {
+      // Always obtain the active Admin Clerk token at click time. A token from
+      // localStorage can be stale after a Clerk session changes.
+      const token = await getToken();
+      if (!token) {
+        throw new Error("Your admin sign-in session has expired. Please sign in again.");
+      }
+
+      const res = await adminFetch(`${API_BASE}/api/doctors/${id}/admin`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          ...editForm,
+          experience: String(editForm.experience || "").trim(),
+          fee: Number(editForm.fee) || 0,
+          rating: Number(editForm.rating) || 0,
+        }),
+      });
+      const body = await res.json().catch(() => null);
+      if (!res.ok) throw new Error(body?.message || "Failed to update doctor");
+
+      const updated = body?.data || body?.doctor;
+      setDoctors((current) =>
+        current.map((doctor) =>
+          (doctor._id || doctor.id) === id ? { ...doctor, ...updated } : doctor,
+        ),
+      );
+      setEditingDoctor(null);
+    } catch (error) {
+      alert(error.message || "Unable to update doctor details");
+    } finally {
+      setSavingEdit(false);
     }
   }
 
@@ -368,6 +436,13 @@ export default function AnimatedDoctorListResponsive({ apiBase }) {
                     <div className={doctorListStyles.actionContainer}>
                       <div className="flex items-center gap-2">
                         <button
+                          onClick={() => startEdit(doc)}
+                          title={`Edit ${doc.name}`}
+                          className="inline-flex cursor-pointer items-center gap-1 rounded-md bg-emerald-600 px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                        >
+                          <Pencil size={14} /> Edit
+                        </button>
+                        <button
                           onClick={() => removeDoctor(id)}
                           title={`Delete ${doc.name}`}
                           className={doctorListStyles.deleteButton}
@@ -479,6 +554,43 @@ export default function AnimatedDoctorListResponsive({ apiBase }) {
           </div>
         )}
       </main>
+
+      {editingDoctor && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4">
+          <form onSubmit={saveEdit} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl">
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <h2 className="text-xl font-bold text-slate-900">Edit doctor</h2>
+              <button type="button" onClick={() => setEditingDoctor(null)} className="text-sm font-medium text-slate-500 hover:text-slate-800">Cancel</button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {[
+                ["name", "Name"], ["email", "Email"], ["specialization", "Specialization"],
+                ["experience", "Experience (for example: 5+ years)"], ["qualifications", "Qualifications"],
+                ["location", "Location"], ["fee", "Fee", "number"], ["rating", "Rating", "number"],
+              ].map(([field, label, type = "text"]) => (
+                <label key={field} className="text-sm font-medium text-slate-700">
+                  {label}
+                  <input type={type} value={editForm[field] ?? ""} onChange={(event) => setEditForm((current) => ({ ...current, [field]: event.target.value }))} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-emerald-600" required={field === "name" || field === "email"} />
+                </label>
+              ))}
+              <label className="text-sm font-medium text-slate-700">
+                Availability
+                <select value={editForm.availability} onChange={(event) => setEditForm((current) => ({ ...current, availability: event.target.value }))} className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-emerald-600">
+                  <option>Available</option><option>Unavailable</option>
+                </select>
+              </label>
+            </div>
+            <label className="mt-4 block text-sm font-medium text-slate-700">
+              About
+              <textarea value={editForm.about ?? ""} onChange={(event) => setEditForm((current) => ({ ...current, about: event.target.value }))} rows="4" className="mt-1 w-full rounded-md border border-slate-300 px-3 py-2 outline-none focus:border-emerald-600" />
+            </label>
+            <div className="mt-6 flex justify-end gap-3">
+              <button type="button" onClick={() => setEditingDoctor(null)} className="rounded-md border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700">Cancel</button>
+              <button disabled={savingEdit} className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white disabled:opacity-60">{savingEdit ? "Saving..." : "Save changes"}</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }

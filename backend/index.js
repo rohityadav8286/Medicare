@@ -10,6 +10,7 @@ import appointmentRouter from './routes/appointmentRouter.js';
 import doctorRouter from './routes/doctorRouter.js';
 import serviceRouter from './routes/serviceRoutes.js';
 import serviceAppointmentRouter from './routes/serviceAppointmentRouter.js';
+import adminRouter from './routes/adminRouter.js';
 
 const app = express();
 const port = process.env.PORT || 4000;
@@ -56,6 +57,7 @@ app.use("/api/appointments", appointmentRouter);
 app.use("/api/doctors", doctorRouter);
 app.use("/api/services", serviceRouter);
 app.use("/api/service-appointments", serviceAppointmentRouter);
+app.use("/api/admin", adminRouter);
 
 // Test route
 app.get('/', (req, res) => {

@@ -2,6 +2,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { Search, Calendar, BadgeIndianRupee } from "lucide-react";
 import { pageStyles, statusClasses, keyframesStyles } from "../../assets/dummyStyles";
+import { adminFetch } from "../../utils/adminFetch";
 
 /* ----------------------
   Config
@@ -177,8 +178,9 @@ export default function AppointmentsPage() {
       );
       setShowAll(true);
 
-      const res = await fetch(`${API_BASE}/api/appointments/${id}/cancel`, {
+      const res = await adminFetch(`${API_BASE}/api/appointments/${id}/cancel`, {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
       });
       if (!res.ok) {

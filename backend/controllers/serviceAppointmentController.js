@@ -44,17 +44,9 @@ const buildFrontendBase = (req) => {
 
 function resolveClerkUserId(req) {
   try {
-    const auth = req.auth || {};
-    const candidate = auth?.userId || auth?.user_id || auth?.user?.id || req.user?.id || null;
-    if (candidate) return candidate;
-    try {
-      const serverAuth = getAuth ? getAuth(req) : null;
-      return serverAuth?.userId || null;
-    } catch (e) {
-      return null;
-    }
-  } catch (e) {
-    return null;
+    return getAuth(req)?.userId || req.user?.id || null;
+  } catch {
+    return req.user?.id || null;
   }
 }
 
@@ -77,7 +69,7 @@ export const createServiceAppointment = async (req, res) => {
       hour,
       minute,
       ampm,
-      paymentMethod = "Online",
+      paymentMethod = "Cash",
       amount: amountFromBody,
       fees: feesFromBody,
       email,

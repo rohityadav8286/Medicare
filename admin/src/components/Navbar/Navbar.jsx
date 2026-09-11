@@ -23,6 +23,8 @@ import logoImg from "../../assets/logo.png";
 import { useClerk, useAuth, useUser } from "@clerk/clerk-react";
 import { navbarStyles as ns } from "../../assets/dummyStyles";
 
+const API_BASE = import.meta.env.VITE_BACKEND_URL || "http://localhost:4000";
+
 export default function AnimatedNavbar() {
   const [open, setOpen] = useState(false);
   const navInnerRef = useRef(null);
@@ -107,7 +109,19 @@ export default function AnimatedNavbar() {
     const storeToken = async () => {
       if (!authLoaded || !userLoaded) return;
       if (!isSignedIn) {
-        // clear token on signed out
+        // The dashboard-password session is separate from Clerk. Revoke it
+        // whenever the Clerk user signs out so the next sign-in is locked.
+        try {
+          await fetch(`${API_BASE}/api/admin/logout`, {
+            method: "POST",
+            credentials: "include",
+          });
+        } catch (err) {
+          // The local Clerk sign-out must still work if the API is offline.
+          console.warn("Could not clear the admin dashboard session:", err);
+        }
+
+        // Clear token on signed out.
         try {
           localStorage.removeItem("clerk_token");
         } catch (e) {
@@ -152,6 +166,17 @@ export default function AnimatedNavbar() {
       console.warn("Clerk signOut not available.");
       return;
     }
+    try {
+      // Clear the server-side admin-password cookie before ending the Clerk
+      // session. This makes a later email login require the password again.
+      await fetch(`${API_BASE}/api/admin/logout`, {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (err) {
+      console.warn("Could not clear the admin dashboard session:", err);
+    }
+
     try {
       await clerk.signOut();
     } catch (err) {

@@ -13,6 +13,7 @@ import AddSer from "./pages/AddSer/AddSer";
 import ListService from "./pages/ListService/ListService";
 import ServiceAppointments from "./pages/ServiceAppointments/ServiceAppointments";
 import Hero from "./components/Hero/Hero";
+import AdminPasswordGate from "./components/AdminPasswordGate/AdminPasswordGate";
 
 function RequireAuth({ children }) {
   const { isLoaded, isSignedIn } = useUser();
@@ -42,7 +43,7 @@ function RequireAuth({ children }) {
         </div>
       </div>
     );
-  return children;
+  return <AdminPasswordGate>{children}</AdminPasswordGate>;
 }
 
 const App = () => {

@@ -270,6 +270,13 @@ export async function updateDoctor(req, res) {
   }
 }
 
+// Admins can update any doctor after passing the admin Clerk and password
+// checks. Reuse the same validation and persistence path as doctor self-edit.
+export async function updateDoctorByAdmin(req, res) {
+  req.doctor = { _id: req.params.id };
+  return updateDoctor(req, res);
+}
+
 export async function deleteDoctor(req, res) {
   try {
     const { id } = req.params;

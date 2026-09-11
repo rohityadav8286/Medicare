@@ -10,6 +10,7 @@ import {
   EyeClosed,
 } from "lucide-react";
 import { doctorDetailStyles as s } from "../../assets/dummyStyles";
+import { adminFetch } from "../../utils/adminFetch";
 
 function timeStringToMinutes(t) {
   if (!t) return 0;
@@ -250,8 +251,9 @@ export default function DoctorDetailPage() {
 
       const API_BASE = "http://localhost:4000/api";
 
-      const res = await fetch(`${API_BASE}/doctors`, {
+      const res = await adminFetch(`${API_BASE}/doctors`, {
         method: "POST",
+        credentials: "include",
         body: fd,
       });
 

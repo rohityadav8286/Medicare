@@ -2,6 +2,7 @@
 // Fixed reschedule flow to send `rescheduledTo` and handle backend response shape { success: true, data: updated }
 
 import React, { useEffect, useMemo, useState } from "react";
+import { adminFetch } from "../../utils/adminFetch";
 import {
   User,
   Phone,
@@ -408,8 +409,9 @@ export default function ServiceAppointmentsPage() {
     pushToast("Updating status", `Appointment #${id} → ${newStatus}`);
 
     try {
-      const res = await fetch(`${API_BASE}/api/service-appointments/${id}`, {
+      const res = await adminFetch(`${API_BASE}/api/service-appointments/${id}`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
@@ -493,8 +495,9 @@ export default function ServiceAppointmentsPage() {
     );
 
     try {
-      const res = await fetch(`${API_BASE}/api/service-appointments/${id}`, {
+      const res = await adminFetch(`${API_BASE}/api/service-appointments/${id}`, {
         method: "PUT",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         // send rescheduledTo (backend expects this) and set status
         body: JSON.stringify({
@@ -571,10 +574,11 @@ export default function ServiceAppointmentsPage() {
     pushToast("Canceling", `Appointment #${id} is being canceled`);
 
     try {
-      const res = await fetch(
+      const res = await adminFetch(
         `${API_BASE}/api/service-appointments/${id}/cancel`,
         {
           method: "POST",
+          credentials: "include",
           headers: { "Content-Type": "application/json" },
         }
       );

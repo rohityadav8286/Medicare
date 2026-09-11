@@ -11,6 +11,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { addServiceStyles } from "../../assets/dummyStyles";
+import { adminFetch } from "../../utils/adminFetch";
 
 
 
@@ -321,7 +322,7 @@ export default function AddService({ apiBase, serviceId }) {
         : `${API_BASE}/api/services`;
       const method = serviceId ? "PUT" : "POST";
 
-      const res = await fetch(url, { method, body: fd });
+      const res = await adminFetch(url, { method, body: fd });
       const data = await res.json().catch(() => null);
 
       if (!res.ok) {

@@ -11,6 +11,7 @@ import {
   Plus,
 } from "lucide-react";
 import { serviceListStyles as s } from "../../assets/dummyStyles";
+import { adminFetch } from "../../utils/adminFetch";
 
 export default function ListServicePage({ apiBase }) {
   const API_BASE = apiBase || "http://localhost:4000";
@@ -540,8 +541,9 @@ function sortSlotsForDisplay(slots = []) {
       }
 
       const id = editForm.id;
-      const res = await fetch(`${API_BASE}/api/services/${id}`, {
+      const res = await adminFetch(`${API_BASE}/api/services/${id}`, {
         method: "PUT",
+        credentials: "include",
         body: fd,
       });
       const body = await res.json().catch(() => null);
@@ -594,8 +596,9 @@ function sortSlotsForDisplay(slots = []) {
     if (!window.confirm("Are you sure you want to remove this service?"))
       return;
     try {
-      const res = await fetch(`${API_BASE}/api/services/${id}`, {
+      const res = await adminFetch(`${API_BASE}/api/services/${id}`, {
         method: "DELETE",
+        credentials: "include",
       });
       const body = await res.json().catch(() => null);
       if (!res.ok) {

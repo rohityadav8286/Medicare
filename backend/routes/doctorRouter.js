@@ -7,12 +7,14 @@ import {
   getDoctors,
   getDoctorById,
   updateDoctor,
+  updateDoctorByAdmin,
   deleteDoctor,
   toggleAvailability,
   doctorLogin,
 } from "../controllers/doctorController.js";
 
 import doctorAuth from "../middlewares/doctorAuth.js";
+import { requireAdminPassword } from "../middlewares/adminPasswordAuth.js";
 
 const upload = multer({ dest: "/tmp" });
 
@@ -24,7 +26,13 @@ const doctorRouter = express.Router();
 doctorRouter.get("/", getDoctors);
 doctorRouter.post("/login", doctorLogin);
 doctorRouter.get("/:id", getDoctorById);
-doctorRouter.post("/", upload.single("image"), createDoctor);
+doctorRouter.post("/", requireAdminPassword, upload.single("image"), createDoctor);
+doctorRouter.put(
+  "/:id/admin",
+  requireAdminPassword,
+  upload.single("image"),
+  updateDoctorByAdmin,
+);
 doctorRouter.put(
   "/:id",
   doctorAuth,
@@ -36,6 +44,6 @@ doctorRouter.post(
   doctorAuth,
   toggleAvailability
 );
-doctorRouter.delete("/:id", deleteDoctor);
+doctorRouter.delete("/:id", requireAdminPassword, deleteDoctor);
 
 export default doctorRouter;

@@ -30,7 +30,9 @@ export default function ServiceDetail() {
   const [gender, setGender] = useState("");
 
   const [email, setEmail] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("Online");
+  // Cash is the default so service bookings work even when online payments
+  // have not been configured on the server.
+  const [paymentMethod, setPaymentMethod] = useState("Cash");
 
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -318,7 +320,7 @@ export default function ServiceDetail() {
         time: selectedTime,
         fee: service?.price ?? 0,
         fees: service?.price ?? 0,
-        paymentMethod: paymentMethod === "Cash" ? "Cash" : "Online",
+        paymentMethod,
         email: email || undefined,
         meta: {
           client: "frontend",
@@ -383,7 +385,7 @@ export default function ServiceDetail() {
         "Booking created successfully. Redirecting to appointments...",
       );
       setTimeout(() => {
-        navigate("/appointments?payment_status=Paid", { replace: true });
+        navigate("/appointments?payment_status=Pending", { replace: true });
       }, 700);
 
       setCustomerName("");
